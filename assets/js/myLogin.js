@@ -1,64 +1,68 @@
 $(function () {
-    // 点击“去注册账号”的链接
+    // 点击去注册去登录互相切换
     $('#link_reg').on('click', function () {
-        $('.login-box').hide()
-        $('.reg-box').show()
-    })
-
-    // 点击“去登录”的链接
+        $('.login-box').hide();
+        $('.reg-box').show();
+    });
     $('#link_login').on('click', function () {
-        $('.login-box').show()
-        $('.reg-box').hide()
-    })
+        $('.reg-box').hide();
+        $('.login-box').show();
+    });
 
-    // 自定义校验规则
+    // 自定义layui验证
     const form = layui.form;
     form.verify({
-        pwd: [/^[\S]{6,12}$/, '密码格式错误，密码必须是6-12位且不包含空格。'],
+        pwd: [
+            /^[\S]{6,12}$/, '密码必须6到12位，且不能出现空格'
+        ],
         repwd: function (value) {
+            // value 是表单的值，再获取pwd跟他进行比较
+            // []是属性选择器
             let pwd = $('.reg-box [name=password]').val();
-            if (pwd !== value) {
-                return '两次密码不一致!';
-            }
+            if (value !== pwd) {
+                layer.msg('两次密码不一致！');
+                // return '两次密码不一致！';
+            };
         },
-    })
+    });
 
-    // 注册功能，本质：监听并提交表单
+    // 监听表单提交事件并且把注册表单提交给后端
     $('#form_reg').on('submit', function (e) {
+        // 阻止默认提交
         e.preventDefault();
-        let data = {
-            username: $('#form_reg [name=username]').val(),
-            password: $('#form_reg [name=password]').val(),
+        // 把要传入的数据拿出来
+        data = {
+            username: $('#form_reg [name="username"]').val(),
+            password: $('#form_reg [name="password"]').val(),
         }
+        // 调用接口
         $.post('http://api-breakingnews-web.itheima.net/api/reguser', data, function (res) {
+            // 先判断请求是否成功
             if (res.status !== 0) {
-                // return console.log('注册失败!', res.data);
-                return layer.msg(res.message);
+                // return console.log('注册失败', res.message);
+                return layer.msg('注册失败,' + res.message);
             }
-            // console.log('注册成功!');
-            layer.msg('注册成功请登录');
-            $('#link_login').click();
+            layer.msg(res.message);
+            // alert(res.message);
         });
     });
-    // 监听登录表单的提交事件
-    $('#form_login').submit(function (e) {
-        // 阻止默认提交行为
-        e.preventDefault()
-        $.ajax({
-            url: 'http://api-breakingnews-web.itheima.net/api/login',
-            method: 'POST',
-            // 快速获取表单中的数据
-            data: $(this).serialize(),
-            success: function (res) {
-                if (res.status !== 0) {
-                    return layer.msg('登录失败！')
-                }
-                layer.msg('登录成功！')
-                // 将登录成功得到的 token 字符串，保存到 localStorage 中
-                localStorage.setItem('token', res.token)
-                // 跳转到后台主页
-                location.href = '/index.html'
-            }
+
+    // 根据用户名和密码进行登录
+    // 登录是对表单的监听
+    $('#form_login').on('submit', function (e) {
+        // 阻止默认跳转
+        e.preventDefault();
+        // 看文档写
+        // 注册有一个确认密码的框，所以不能用serialize()全部获取
+        $.post('http://api-breakingnews-web.itheima.net/api/login', $(this).serialize(), function (res) {
+            if (res.status !== 0) {
+                layer.msg(res.message);
+                // return res.message;
+            };
+            // 请求成功之后把返回的token存在本地
+            localStorage.setItem('token', res.token);
+            // return res.message;
+            return layer.msg(res.message);
         })
-    })
+    });
 })
