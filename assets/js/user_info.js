@@ -9,7 +9,21 @@ $(function () {
     });
 
     initUserInfo();
-
+    // 获取表单
+    function initUserInfo() {
+        $.ajax({
+            method: 'GET',
+            url: '/my/userinfo',
+            success: function (res) {
+                if (res.status !== 0) {
+                    return layer.msg('获取用户信息失败！');
+                }
+                // console.log(res.data);
+                // 把获取到的用户的基本信息写入表单里
+                form.val('formUserInfo', res.data);
+            },
+        })
+    };
     // 重置表单
     $('#btnReset').on('click', function (e) {
         e.preventDefault();
@@ -23,6 +37,7 @@ $(function () {
         $.ajax({
             method: 'POST',
             url: '/my/userinfo',
+            data: $(this).serialize(),
             success: function (res) {
                 if (res.status !== 0) {
                     return layer.msg('更新用户信息失败');
@@ -34,18 +49,5 @@ $(function () {
         });
     });
 
-    // 获取表单
-    function initUserInfo() {
-        $.ajax({
-            method: 'GET',
-            url: '/my/userinfo',
-            success: function (res) {
-                if (res.status !== 0) {
-                    return layer.msg('获取用户信息失败！');
-                }
-                console.log(res.data);
-                form.val('formUserInfo', res.data);
-            },
-        })
-    };
+
 });
